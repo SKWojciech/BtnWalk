@@ -13,6 +13,7 @@
 #include <boost/graph/graphviz.hpp>
 #include <libxml/HTMLparser.h>
 #include <libxml/xpath.h>
+#include <cxxopts.hpp>
 
 
 // Implements 'defer'
@@ -339,44 +340,72 @@ struct NameWriter {
 
 int main(int argc, const char* argv[])
 {
-	std::string url = {};
-	if (argc < 2) {
-		//url = "https://www.unix.dog/~yosh"; // From dog run
-		url = "https://beepi.ng/"; // From machine run, also archive links
-		//url = "https://medicinebottle.neocities.org/"; // From neocities run
-		//url = "https://arch.dog"; // Hidden JS-only buttons! (Not accounted for)
-		//url = "https://www.thunderbird.net"; // Segfaults tidy-html5 :)
-		//url = "https://lina.sh"; // Example of an infinite stream (User-agent based)
-		//url = "https://minecraft.net"; // Example of an unresponsive page
-		//url = "https://adryd.com/"; // Example of link URLs without a scheme (prefixed with only '//')
-		//url = "https://cobaltmusic.fi";
-		//url = "https://bun-e.fyi/";
-		fmt::println("Using default url: {}", url);
+	cxxopts::Options options("BtnWalk", "Recursively fetches 88x31 buttons on websites");
+	options.add_options()
+		("u,url", "Initial URL to fetch", cxxopts::value<std::string>())
+		("n", "Maximum number of websites to visit", cxxopts::value<int>()->default_value("1"))
+		("o,output", "Output filename for the graph", cxxopts::value<std::string>()->default_value("out.dot"))
+		("h,help", "Usage help");
+	options.parse_positional({"url", "n"});
+	options.positional_help("<url> [n]").show_positional_help();
+	
+	//url = "https://www.unix.dog/~yosh"; // From dog run
+	//url = "https://beepi.ng/"; // From machine run, also archive links
+	//url = "https://medicinebottle.neocities.org/"; // From neocities run
+	//url = "https://arch.dog"; // Hidden JS-only buttons! (Not accounted for)
+	//url = "https://www.thunderbird.net"; // Segfaults tidy-html5 :)
+	//url = "https://lina.sh"; // Example of an infinite stream (User-agent based)
+	//url = "https://minecraft.net"; // Example of an unresponsive page
+	//url = "https://adryd.com/"; // Example of link URLs without a scheme (prefixed with only '//')
+	//url = "https://cobaltmusic.fi";
+	//url = "https://bun-e.fyi/";
+	
+	cxxopts::ParseResult result;
+	try {
+		result = options.parse(argc, argv);
+	} catch (const cxxopts::exceptions::exception& e) {
+		fmt::println("{}\n" "See usage with:\n\t" "btnwalk --help", e.what());
+		return 1;
 	}
-	else {
-		url = argv[1];
+	
+	if (result.count("help")) {
+		fmt::print("{}", options.help());
+		fmt::println("Example:\n\t" "btnwalk https://www.unix.dog/~yosh -n 10");
+		return 0;
 	}
-
-	//int max_depth = 2000;
-	int max_depth = 1;
-	if (argc < 3) {
-		fmt::println("Using default depth: {}", max_depth);
+	
+	if (result.count("url") == 0) {
+		fmt::println("Missing initial url\n" "See usage with:\n\t" "btnwalk --help");
+		return 1;
 	}
-	else {
-		max_depth = atoi(argv[2]);
-	}
-
+	
+	auto url = result["url"].as<std::string>();
 	if (url.ends_with('/'))
 		url.pop_back();
 	if (!url.contains("://"))
 		url = "https://" + url;
+	
+	auto n = result["n"].as<int>();
+	if (n <= 0) {
+		fmt::println("'n' must be a positive integer");
+		return 1;
+	}
+	
+	auto output_file = result["output"].as<std::string>();
+	std::ofstream outf(output_file);
+	if (!outf) {
+		fmt::println("Could not open output file for writing");
+		return 1;
+	}
+	
 	auto vert = boost::add_vertex(UrlProperty(url), graph);
 	url_verts.insert({ url, vert });
-
-	iterHTMLpages(url, max_depth);
-
-	std::ofstream outf("out.dot");
+	
+	iterHTMLpages(url, n);
+	
+	fmt::println("Writing output graph...");
+	
 	boost::write_graphviz(outf, graph, NameWriter{});
-
+	
 	return 0;
 }

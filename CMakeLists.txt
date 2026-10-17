@@ -80,7 +80,14 @@ CPMAddPackage(
 	URL_HASH SHA256=A2F4A8D51178F954E4C339007F77EDD76BA0CB2E36F87A48E5A5403D9BE5878F
 )
 
+CPMAddPackage(
+	NAME cxxopts
+	VERSION 3.3.1
+	URL https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.3.1.tar.gz
+	URL_HASH SHA256=3BFC70542C521D4B55A46429D808178916A579B28D048BD8C727EE76C39E2072
+)
+
 
 add_executable(btnwalk)
 target_sources(btnwalk PRIVATE main.cpp)
-target_link_libraries(btnwalk PRIVATE fmt::fmt CURL::libcurl LibXml2 imageinfo::imageinfo Boost::graph)
+target_link_libraries(btnwalk PRIVATE fmt::fmt CURL::libcurl LibXml2 imageinfo::imageinfo Boost::graph cxxopts::cxxopts)
