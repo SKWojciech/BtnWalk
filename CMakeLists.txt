@@ -23,8 +23,9 @@ CPMAddPackage(
 		"LIBXML2_WITH_ZLIB OFF"
 )
 
-# Not named "nghttp2": CPM would register a find_package redirect for that name, which
-# shadows curl's FindNGHTTP2.cmake so CURL::nghttp2 never gets created
+# Cannot name it "nghttp2": CPM would register a find_package redirect for that name, which
+# shadows curl's FindNGHTTP2.cmake so CURL::nghttp2 never gets created.
+# This still causes a warning about a 'Bad lib', but at least it configures now!
 CPMAddPackage(
 	NAME libnghttp2
 	VERSION 1.70.0
