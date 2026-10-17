@@ -2,17 +2,24 @@
   "version": 4,
   "configurePresets": [
     {
-      "name": "debug",
+      "name": "base",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CPM_SOURCE_CACHE": "${sourceDir}/build/.cpm-cache"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": ["base"],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
+        "inherits": ["base"],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
